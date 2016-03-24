@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+root_dir = File.expand_path('../..', File.dirname(__FILE__))
+puts root_dir
+
+protos_dir = File.join(root_dir, 'protobuf/src')
+
+puts protos_dir
+
+proto_files = Dir[File.join(protos_dir, '**/*.proto')].reject { |p| p =~ /test/ }
+
+compile_files = proto_files.select do |path|
+  File.read(path) =~ /syntax\s*?=\s*?("|')proto3("|')/m
+end
+
+output_dir = File.join(root_dir, 'ruby/sesame_rpc/lib/pb')
+
+cmd = <<-CMD
+protoc -I#{protos_dir} --ruby_out=#{output_dir} #{compile_files.join(' ')}
+CMD
+
+`#{cmd}`
+
+
+

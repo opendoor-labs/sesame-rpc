@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+
+# Acts as a plugin for protoc to generate service files for ruby.
+#
+#     protoc --ruby_out=some/dir --plugin=proto-gen-sesame=`which ruby_sesame_rpc` --sesame_out=some/dir ./protos/some_proto.proto
+
+import os
+import sys
+import inflection
+
+path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../pb')
+sys.path.append(os.path.normpath(path))
+
+from google.protobuf.compiler.plugin_pb2 import CodeGeneratorRequest
+from google.protobuf.compiler.plugin_pb2 import CodeGeneratorResponse
+
+def dependencies(file_descriptor):
+    if len(file_descriptor.dependency) == 0:
+        return ''
+
+    content = ''
+    for dep in file_descriptor.dependency:
+        content += "require '{path}'\n".format(path=os.path.splitext(dep)[0])
+
+    return content
+
+def full_type(type_string):
+    return "::".join(list(map(inflection.camelize, type_string[1:].split('.'))))
+
+def generate_service(service_descriptor, file_descriptor):
+    namespace = "::".join(list(map(inflection.camelize, file_descriptor.package.split('.'))))
+
+    content = "# Generated file from {f.package} for {s.name}\n\n"
+    content += "require 'google/protobuf'\n"
+    content += "require 'sesame_rpc'\n"
+    content += "require '{name}'\n".format(name=os.path.splitext(file_descriptor.name)[0])
+
+    content += dependencies(file_descriptor)
+
+    content += '''
+class {namespace}::{s.name}
+  include SesameRpc::GenericService
+
+  self.service_name = '{f.package}.{s.name}'
+'''
+
+    for method in service_descriptor.method:
+        method_content = '''
+  rpc :{method.name}, {input_type}, {output_type}
+'''
+        content += method_content.format(
+                method=method,
+                input_type=full_type(method.input_type),
+                output_type=full_type(method.output_type)
+                )
+
+    content += '\nend'
+
+    return content.format(namespace=namespace, s=service_descriptor, f=file_descriptor)
+
+in_lines = sys.stdin.buffer.read()
+request = CodeGeneratorRequest()
+request.ParseFromString(in_lines)
+
+output = CodeGeneratorResponse()
+
+for file_descriptor in request.proto_file:
+    if not len(file_descriptor.service) > 0:
+        continue
+
+    pb_file = output.file.add()
+    pb_file.name = file_descriptor.name.split('.')[0] + '_service.rb'
+
+
+    for service_descriptor in file_descriptor.service:
+        content = generate_service(service_descriptor, file_descriptor)
+        pb_file.content = content
+
+sys.stdout.buffer.write(output.SerializeToString())
+
