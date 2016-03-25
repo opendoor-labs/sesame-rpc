@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package od.api.v1.humans;
+
+import 'google/protobuf/empty.proto';
+
+message Human {
+  uint64 id = 1;
+  string email = 2;
+}
+
+message GetHumanRequest {
+  string email = 1;
+}
+
+service HumanService {
+  rpc Info(google.protobuf.Empty) returns (Human) {}
+  rpc GetHuman(GetHumanRequest) returns (Human) {}
+}
+

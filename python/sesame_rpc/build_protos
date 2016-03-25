@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+import os
+import re
+import subprocess
+
+root_dir = os.path.abspath(os.path.join(__file__, '../../..'))
+print(root_dir)
+
+protos_dir = os.path.join(root_dir, 'protos')
+print(protos_dir)
+
+proto_files = [os.path.join(protos_dir, f) for f in os.listdir(protos_dir)
+               if f.endswith('.proto')]
+print(proto_files)
+
+proto3_re = re.compile("syntax[\s+]?=[\s+]?['\"]proto3['\"]")
+def is_proto3(f):
+    with open(f) as infile:
+        content = infile.read()
+    return proto3_re.search(content) is not None
+
+compile_files = [f for f in proto_files if is_proto3(f)]
+print(compile_files)
+
+output_dir = os.path.join(root_dir, 'python/sesame_rpc/lib/pb')
+
+python_sesame_rpc = os.path.join(root_dir, 'bin/python_sesame_rpc')
+
+cmds = [
+    'protoc', '-I' + protos_dir, '--python_out=' + output_dir,
+    '--plugin=protoc-gen-odrpc=' + python_sesame_rpc,
+    '--odrpc_out=' + output_dir]
+cmds += compile_files
+
+print(cmds)
+subprocess.call(cmds)

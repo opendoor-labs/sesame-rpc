@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+
+# Acts as a plugin for protoc to generate service files for python.
+#
+#     protoc --python_out=some/dir --plugin=protoc-gen-sesame=`which python_sesame_rpc` --sesame_out=some/dir ./protos/some_proto.proto
+
+
+import os
+import re
+import sys
+
+from google.protobuf.compiler.plugin_pb2 import CodeGeneratorRequest, \
+    CodeGeneratorResponse
+
+from google.protobuf.descriptor_pb2 import FileDescriptorProto, ServiceDescriptorProto
+
+from collections import namedtuple
+
+
+in_lines = sys.stdin.buffer.read()
+request = CodeGeneratorRequest()
+request.ParseFromString(in_lines)
+
+output = CodeGeneratorResponse()
+
+
+def dependencies(file_descriptor: FileDescriptorProto):
+    if not len(file_descriptor.dependency):
+        return ''
+
+    content = 'import abc'
+    for dep in file_descriptor.dependency:
+        content += 'import {path}\n'.format(paht=os.path.splitext(dep)[0])
+    return content
+
+
+def snake_case(s):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+
+def generate_service(service_descriptor: ServiceDescriptorProto,
+                     file_descriptor: FileDescriptorProto):
+    content = '# Generated file from {f.package} for {s.name}\n\n'
+    content += 'from sesame_rpc import SesameRpc\n'
+    content += 'import {name}\n'
+
+    content += dependencies(file_descriptor)
+
+    content += '''
+class I{class_name}(metaclass=SesameService):
+    __service_name__ = '{f.package}.{s.name}'
+'''
+
+    for method in service_descriptor.method:
+        method_content = '''
+    @abc.abstractmethod
+    def {method_name}(self, {input_name}: {input_type}) -> {output_type}:
+        raise NotImplementedError
+'''
+        input_type = method.input_type.split('.')[-1]
+        output_type = method.output_type.split('.')[-1]
+        content += method_content.format(
+            method=method,
+            input_name=snake_case(input_type),
+            input_type =input_type,
+            output_type=output_type
+        )
+
+    return content.format(s=service_descriptor, f=file_descriptor)
+
+
+for file_descriptor in request.proto_file:
+    if not len(file_descriptor.service):
+        continue
+
+    pb_file = output.file.add()
+    pb_file.name = os.path.splitext(file_descriptor.name)[0] + '_service.py'
+
+    for service_descriptor in file_descriptor.service:
+        content = generate_service(service_descriptor, file_descriptor)
+        pb_file.content = content
+
+
+sys.stdout.buffer.write(output.SerializeToString())
