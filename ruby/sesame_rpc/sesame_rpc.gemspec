@@ -27,7 +27,7 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency 'protobuf', '~> 3.0.0.alpha.5.0.3 '
+  spec.add_dependency 'google-protobuf', '~> 3.0.0.alpha.5.0.3 '
   spec.add_dependency 'activesupport', '>= 3.0'
 
   spec.add_development_dependency "bundler", "~> 1.10"

@@ -1,0 +1,26 @@
+require 'fileutils'
+
+namespace :sesame_rpc do
+  desc 'Compile your proto files'
+  task :compile do
+    proto_path = Rails.root.join('protos')
+    protos_glob = Rails.root.join('protos/**/*.proto')
+    output_dir = Rails.root.join('lib/protos')
+
+    puts "MAKING THE OUTPUT DIR #{output_dir}"
+    FileUtils.mkdir_p(output_dir)
+
+    proto_files = Dir[protos_glob]
+
+    cmd = <<-CMD
+protoc -I#{proto_path} --ruby_out=#{output_dir} --plugin=protoc-gen-sesame=`which ruby_sesame_rpc` --sesame_out=#{output_dir} --include_source_info -o#{Rails.root.join('proto_bundle')} #{proto_files.join(' ')}
+CMD
+
+  puts cmd
+  puts "\n" * 5
+
+    `#{cmd}`
+  end
+end
+
+task sesame_rpc: ['sesame_rpc:compile']

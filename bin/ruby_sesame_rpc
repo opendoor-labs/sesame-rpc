@@ -2,7 +2,7 @@
 
 # Acts as a plugin for protoc to generate service files for ruby.
 #
-#     protoc --ruby_out=some/dir --plugin=proto-gen-sesame=`which ruby_sesame_rpc` --sesame_out=some/dir ./protos/some_proto.proto
+#     protoc --ruby_out=some/dir --plugin=protoc-gen-sesame=`which ruby_sesame_rpc` --sesame_out=some/dir ./protos/some_proto.proto
 
 import os
 import sys
