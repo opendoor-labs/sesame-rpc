@@ -6,8 +6,8 @@ module SesameRpc
     @@http_errors_by_status[status]
   end
 
-  make_http_error = ->(name, status, inehrit_from=HTTPError) do
-    klass = Class.new(SesameRpc::HTTPError) do
+  make_http_error = ->(name, status, inherit_from=SesameRpc::HTTPError) do
+    klass = Class.new(inherit_from) do
       define_method(:status) { status }
     end
 

@@ -101,7 +101,6 @@ module SesameRpc
             output
           end
         end
-
       end
     end
   end
