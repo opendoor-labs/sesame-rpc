@@ -1,3 +1,4 @@
+require 'sesame_rpc/errors'
 module SesameRpc
   module Rails
     # Provides helpers for your controller to automatically map to a proto service implementation
@@ -13,10 +14,10 @@ module SesameRpc
     #
     #   private
     #   def sesame_context
-    #     {
-    #       user: current_user
-    #       jwt: current_jwt
-    #     }
+    #     context = super
+    #     context[:user] = current_user,
+    #     context[:jwt] = current_jwt
+    #     context
     #   end
     #
     # end
@@ -24,11 +25,11 @@ module SesameRpc
       extend ActiveSupport::Concern
 
       def sesame_content_type
-        @sesame_content_type ||= Mime::Type.parse(request.content_type).first.try(:symbol)
+        @sesame_content_type ||= ::Mime::Type.parse(request.content_type).first.try(:symbol)
       end
 
       def sesame_accept_type
-        request.format.symbol
+        @sesame_accept_type ||= ::Mime::Type.parse(request.headers['HTTP_ACCEPT'])
       end
 
       def parse_sesame_in
@@ -49,6 +50,10 @@ module SesameRpc
         end
       end
 
+      def rescue_from_sesame_http_error(ex)
+        render json: { errors: ex.message }, status: ex.status
+      end
+
       def sesame_context
         {}
       end
@@ -56,6 +61,8 @@ module SesameRpc
       module ClassMethods
 
         def implement_rpc(service_impl)
+          rescue_from SesameRpc::HTTPError, with: :rescue_from_sesame_http_error
+
           service_impl.rpcs.each do |name, rpc|
             prepend_before_action "prepare_sesame_rpc_#{name}", only: [name]
 

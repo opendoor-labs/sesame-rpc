@@ -10,7 +10,7 @@ module SesameRpc
       railtie_name 'sesame_rpc_railtie'
 
       initializer 'sesame_rpc.register_mime' do
-        Mime::Type.register 'application/octet-stream', :proto, %w(application/x-google-protobuf application/vnd.google.protobuf)
+        ::Mime::Type.register 'application/octet-stream', :proto, %w(application/x-google-protobuf application/vnd.google.protobuf)
       end
 
       rake_tasks do
