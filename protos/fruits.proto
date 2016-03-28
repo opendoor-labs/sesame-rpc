@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package od.api.v1.fruits;
+
+message Apple {
+  string color = 1;
+}

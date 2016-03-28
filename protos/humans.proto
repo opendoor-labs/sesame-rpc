@@ -3,10 +3,12 @@ syntax = "proto3";
 package od.api.v1.humans;
 
 import 'google/protobuf/empty.proto';
+import 'fruits.proto';
 
 message Human {
   uint64 id = 1;
   string email = 2;
+  od.api.v1.fruits.Apple apple = 3;
 }
 
 message GetHumanRequest {

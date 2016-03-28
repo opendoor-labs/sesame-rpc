@@ -3,6 +3,8 @@ import inspect
 from functools import wraps
 from itertools import chain
 
+from google.protobuf.reflection import GeneratedProtocolMessageType
+
 
 class SesameService(abc.ABCMeta):
     """ SesameService is supplied as a metaclass for interfaces to ensure
@@ -29,8 +31,7 @@ def rewrite_funcs(cls, iface):
         setattr(cls, func_name, new_func)
 
 
-# annotation is a pb2 type
-def check_pb(func, arg_name, arg, annotation):
+def check_pb(func, arg_name, arg, annotation: GeneratedProtocolMessageType):
     if annotation is None:
         return
 
@@ -52,5 +53,3 @@ def checked_func(iface_func, func):
         check_pb(func, 'return', result, annotations['return'])
         return result
     return _checked_func
-
-
