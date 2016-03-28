@@ -1,0 +1,120 @@
+#!/usr/bin/env python
+
+# Acts as a plugin for protoc to generate service files for python.
+#
+#     protoc --python_out=some/dir --plugin=protoc-gen-sesame=`which python_sesame_rpc` --sesame_out=some/dir ./protos/some_proto.proto
+
+
+import os
+import re
+import sys
+from collections import defaultdict
+
+from google.protobuf.compiler.plugin_pb2 import CodeGeneratorRequest, \
+    CodeGeneratorResponse
+from google.protobuf.descriptor_pb2 import FileDescriptorProto, \
+    ServiceDescriptorProto
+
+
+def snake_case(s):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+
+def get_msg_types(service_descriptor: ServiceDescriptorProto):
+    # msg_type
+    msg_types = []
+    for method in service_descriptor.method:
+        msg_types.append(method.input_type)
+        msg_types.append(method.output_type)
+    return msg_types
+
+
+def get_pkg_to_msg_types(msg_types):
+    res = defaultdict(list)
+    for mt in msg_types:
+        pkg = '.'.join(mt.split('.')[1:-1])
+        res[pkg].append(mt.split('.')[-1])
+    return res
+
+
+def generate_service(service_descriptor: ServiceDescriptorProto,
+                     file_descriptor: FileDescriptorProto):
+    content = '''
+class I{class_name}(metaclass=SesameService):
+    __service_name__ = '{f.package}.{s.name}'
+'''
+
+    for method in service_descriptor.method:
+        method_content = '''
+    @abc.abstractmethod
+    def {method}(self, {input_name}: {input_type}) -> {output_type}:
+        raise NotImplementedError
+'''
+        input_type = method.input_type.split('.')[-1]
+        output_type = method.output_type.split('.')[-1]
+        content += method_content.format(
+            method=snake_case(method.name),
+            input_name=snake_case(input_type),
+            input_type =input_type,
+            output_type=output_type,
+        )
+
+    return content.format(
+        class_name=service_descriptor.name,
+        s=service_descriptor,
+        f=file_descriptor,
+        f_name=file_descriptor.name.split('.')[-2])
+
+
+def get_pkg_to_import_name(request: CodeGeneratorRequest):
+    res = {}
+    for fd in request.proto_file:
+        import_name = fd.name.split('.proto')[0].replace('/', '.') + '_pb2'
+        res[fd.package] = import_name
+    return res
+
+
+def generate_imports(pkg_to_import_name, file_descriptor: FileDescriptorProto):
+    msg_types = []
+    for service in file_descriptor.service:
+        msg_types.append(get_msg_types(service))
+    pkg_to_msg_types = get_pkg_to_msg_types(list(set(msg_types)))
+
+
+    content = '# Generated file from {f.package}\n\n'.format(f=file_descriptor)
+    content += 'import abc\n'
+    content += 'from sesame_rpc import SesameService\n'
+    for pkg in pkg_to_msg_types:
+        content += 'from {import_name} import {msg_types}\n'.format(
+            import_name=pkg_to_import_name[pkg],
+            msg_types=', '.join(pkg_to_msg_types[pkg]))
+
+    return content
+
+
+if __name__ == '__main__':
+    in_lines = sys.stdin.buffer.read()
+    request = CodeGeneratorRequest()
+    request.ParseFromString(in_lines)
+
+    output = CodeGeneratorResponse()
+
+    pkg_to_import_name = get_pkg_to_import_name(request)
+
+    for file_descriptor in request.proto_file:
+        fd = file_descriptor
+        if not len(file_descriptor.service):
+            continue
+
+        pb_file = output.file.add()
+        pb_file.name = os.path.splitext(file_descriptor.name)[0] + '_service.py'
+
+        content = generate_imports(pkg_to_import_name, file_descriptor)
+
+        for service_descriptor in file_descriptor.service:
+            content += generate_service(service_descriptor, file_descriptor)
+        pb_file.content = content
+
+    sys.stdout.buffer.write(output.SerializeToString())
+
