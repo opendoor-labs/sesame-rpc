@@ -38,6 +38,10 @@ def get_pkg_to_msg_types(msg_types):
     return res
 
 
+def flatten(l):
+    return [item for sublist in l for item in sublist]
+
+
 def generate_service(service_descriptor: ServiceDescriptorProto,
                      file_descriptor: FileDescriptorProto):
     content = '''
@@ -79,6 +83,7 @@ def generate_imports(pkg_to_import_name, file_descriptor: FileDescriptorProto):
     msg_types = []
     for service in file_descriptor.service:
         msg_types.append(get_msg_types(service))
+    msg_types = flatten(msg_types)
     pkg_to_msg_types = get_pkg_to_msg_types(list(set(msg_types)))
 
 
