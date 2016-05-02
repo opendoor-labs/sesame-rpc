@@ -1,8 +1,9 @@
 import inspect
+import json
 from functools import wraps
 
 from flask import Request, request, make_response
-from google.protobuf.json_format import Parse, MessageToJson
+from protobuf_to_dict import dict_to_protobuf, protobuf_to_dict
 
 
 def sesame_api(iface_func):
@@ -40,7 +41,8 @@ def sesame_api(iface_func):
             if content_mimetype(request) == 'proto':
                 req.ParseFromString(request.get_data())
             else:
-                Parse(request.data, req)
+                request_dict = json.loads(request.data.decode())
+                req = dict_to_protobuf(input_type, request_dict)
 
             res = f(req)
 
@@ -48,7 +50,7 @@ def sesame_api(iface_func):
                 response = make_response(res.SerializeToString())
                 response.content_type = 'application/octet-stream'
             else:
-                response = make_response(MessageToJson(res))
+                response = make_response(json.dumps(protobuf_to_dict(res)))
                 response.content_type = 'application/json'
             return response
         return wrapper

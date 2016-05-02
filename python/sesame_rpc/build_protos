@@ -9,14 +9,7 @@ protos_dir = os.path.join(root_dir, 'protos')
 proto_files = [os.path.join(protos_dir, f) for f in os.listdir(protos_dir)
                if f.endswith('.proto')]
 
-proto3_re = re.compile("syntax[\s+]?=[\s+]?['\"]proto3['\"]")
-def is_proto3(f):
-    with open(f) as infile:
-        content = infile.read()
-    return proto3_re.search(content) is not None
-
-compile_files = [f for f in proto_files if is_proto3(f)]
-print('Compiling files: ', compile_files)
+print('Compiling files: ', proto_files)
 
 output_dir = os.path.join(root_dir, 'python/sesame_rpc/lib/pb')
 print('Outputting to: ', output_dir)
