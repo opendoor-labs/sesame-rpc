@@ -20,6 +20,6 @@ cmds = [
     'protoc', '-I' + protos_dir, '--python_out=' + output_dir,
     '--plugin=protoc-gen-odrpc=' + python_sesame_rpc,
     '--odrpc_out=' + output_dir]
-cmds += compile_files
+cmds += proto_files
 
 subprocess.call(cmds)
