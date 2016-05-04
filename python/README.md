@@ -1,32 +1,12 @@
 ## Dependencies
 
-Python dependencies include protobuf-2.6.1 and protobuf3-to-dict.
+sesame-rpc depends on a Python 3 port of protobuf-2.6.1. Such a port
+can be installed from the link:
 
-Make sure to install protobuf3-to-dict and not protobuf-to-dict, as the former
-is compatible with Python 3 while the latter is not.
+https://github.com/opendoor-labs/protobuf-py3.git@2.6.1#egg=protobuf-py3-2.6.1
 
-protobuf-2.6.1 is not compatible with Python 3 out of the box, but it can be
-made to be compatible using the `2to3` tool. To install the dependency, run the
-source code files listed below through 2to3 and then execute
-`python setup.py install`.
-
-TODO: figure out how to package the protobuf-2.6.1 dependency. One solution is
-to fork protobuf-2.6.1 with the relevant source files passed through 2to3.
-
-The files to convert for protobuf-2.6.1 are:
-
-- protobuf/descriptor.py
-- protobuf/internal/cpp_message.py
-- protobuf/internal/decoder.py
-- protobuf/internal/python_message.py
-- protobuf/internal/type_checkers.py
-- protobuf/internal/message_factory_test.py
-- protobuf/internal/message_factory_python_test.py
-- protobuf/internal/message_python_test.py
-- protobuf/internal/message_test.py
-- protobuf/internal/reflection_test.py
-- protobuf/internal/test_util.py
-- protobuf/internal/text_format_test.py
-- protobuf/message_factory.py
-- protobuf/text_encoding.py
-- protobuf/text_format.py
+If you want to install sesame-rpc as a dependency to your project you must add
+the above as a dependency to your project as well. This dependency could be
+added to the sesame-rpc setup.py using the `dependency_links` kwarg of `setup` but
+we decided not to because dependency links are deprecated and slated for
+removal.
