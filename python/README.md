@@ -1,7 +1,7 @@
 ## Dependencies
 
-sesame-rpc depends on a Python 3 port of protobuf-2.6.1. Such a port
-can be installed from the link:
+sesame-rpc depends on a Python 3 port of protobuf-2.6.1 which includes support for
+converting protobuf messages to and from JSON, which can be installed from the link:
 
 https://github.com/opendoor-labs/protobuf-py3.git@2.6.1#egg=protobuf-py3-2.6.1
 

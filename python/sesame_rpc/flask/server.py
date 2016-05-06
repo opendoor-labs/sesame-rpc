@@ -3,7 +3,7 @@ import json
 from functools import wraps
 
 from flask import Request, request, make_response
-from protobuf_to_dict import dict_to_protobuf, protobuf_to_dict
+from google.protobuf.protobuf_to_dict import dict_to_protobuf, protobuf_to_dict
 
 
 def sesame_api(iface_func):
