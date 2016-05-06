@@ -21,7 +21,6 @@ setup(
         'itsdangerous==0.24',
         'Jinja2==2.8',
         'MarkupSafe==0.23',
-        'protobuf3-to-dict==0.1.2',
         'six==1.10.0',
         'Werkzeug==0.11.9',
     ],

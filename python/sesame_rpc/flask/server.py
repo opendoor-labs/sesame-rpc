@@ -3,7 +3,12 @@ import json
 from functools import wraps
 
 from flask import Request, request, make_response
-from protobuf_to_dict import dict_to_protobuf, protobuf_to_dict
+
+# The protobuf_to_dict module here was copied from the protobuf3_to_dict PyPi
+# package into the Opendoor fork of protobuf-2.6.1.
+# Compare https://github.com/kaporzhu/protobuf-to-dict/blob/master/src/protobuf_to_dict.py
+# and https://github.com/opendoor-labs/protobuf-py3/blob/master/google/protobuf/protobuf_to_dict.py
+from google.protobuf.protobuf_to_dict import dict_to_protobuf, protobuf_to_dict
 
 
 def sesame_api(iface_func):
