@@ -9,7 +9,8 @@ TODO: Delete this and the text above, and describe your gem
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'sesame_rpc'
+gem 'protobuf'
+gem 'sesame_rpc', require: 'sesame_rpc/ruby/protobuf'
 ```
 
 And then execute:

@@ -11,11 +11,12 @@ module SesameRpc
 
       attr_reader :base_uri, :routing_table, :format
 
-      def initialize(base_uri, routing_table:, format: format = :proto)
+      def initialize(base_uri, routing_table:, format: format = :proto, token: token = nil)
         @base_uri = URI.parse(base_uri)
         @base_uri.scheme = 'https://' if @base_uri.scheme.nil?
         @routing_table = routing_table.with_indifferent_access
         @format = format
+        @token = token
       end
 
       private
@@ -32,6 +33,7 @@ module SesameRpc
         request = Net::HTTP::Post.new(uri.request_uri)
         request['accept'] = DEFAULT_ACCEPT_TYPE
         request['User-Agent'] = USER_AGENT
+        request['Authorization'] = "Bearer #{@token}" if @token
 
         case format
         when :proto

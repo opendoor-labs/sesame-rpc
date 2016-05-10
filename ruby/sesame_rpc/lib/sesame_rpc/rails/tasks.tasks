@@ -7,19 +7,26 @@ namespace :sesame_rpc do
     protos_glob = Rails.root.join('protos/**/*.proto')
     output_dir = Rails.root.join('lib/protos')
 
-    puts "MAKING THE OUTPUT DIR #{output_dir}"
     FileUtils.mkdir_p(output_dir)
 
     proto_files = Dir[protos_glob]
 
-    cmd = <<-CMD
-protoc -I#{proto_path} --ruby_out=#{output_dir} --plugin=protoc-gen-sesame=`which ruby_sesame_rpc` --sesame_out=#{output_dir} --include_source_info -o#{Rails.root.join('proto_bundle')} #{proto_files.join(' ')}
+# This command is for proto3 whenever it gets here
+#     cmd = <<-CMD
+# protoc -I#{proto_path} --ruby_out=#{output_dir} --plugin=protoc-gen-sesame=`which ruby_sesame_rpc` --sesame_out=#{output_dir} --include_source_info -o#{Rails.root.join('proto_bundle')} #{proto_files.join(' ')}
+# CMD
+
+    proto_compile_cmd = <<-CMD
+# protoc -I#{proto_path} --ruby_out=#{output_dir} #{proto_files.join(' ')}
 CMD
 
-  puts cmd
-  puts "\n" * 5
-
-    `#{cmd}`
+    pilgrim_compile_cmd = <<-CMD
+# protoc -I#{proto_path} --include_source_info --descriptor_set_out=#{Rails.root.join('proto_bundle')} #{proto_files.join(' ')}
+CMD
+    puts "Compiling protos"
+    `#{proto_compile_cmd}`
+    puts "Compiling pilgrim bundle"
+    `#{pilgrim_compile_cmd}`
   end
 end
 
