@@ -6,12 +6,6 @@ require 'active_support/core_ext/hash/indifferent_access'
 require 'active_support/core_ext/string/inflections'
 require 'sesame_rpc/client'
 
-# hopefully we don't have to do this for long
-# We have to do it for now because google doesn't
-root_dir = File.expand_path('./pb', File.dirname(__FILE__))
-$:.unshift(root_dir)
-Dir[File.join(root_dir, '**/*.rb')].each { |f| require f.sub(root_dir, '').sub(/^\//, '') }
-
 module SesameRpc
   module Errors
     class InvalidInput < ArgumentError; end
@@ -29,7 +23,7 @@ module SesameRpc
     end
 
     module ClassMethods
-      def rpc(name, input_type, output_type)
+      def rpc(name, input_type, output_type, _opts = {})
         meth_name = name.to_s.underscore.to_sym
         value = {
           service: self,
